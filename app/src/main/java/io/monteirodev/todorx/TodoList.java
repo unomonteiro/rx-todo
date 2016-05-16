@@ -13,9 +13,17 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import rx.Observable;
+import rx.subjects.ReplaySubject;
+
 public class TodoList {
 
-    private TodoListener listener;
+    //private TodoListener listener;
+    // Observable to Observer can be a Subject
+    // when emitted will be <TodoList> type
+    // RxJava has create, no need to use new
+    ReplaySubject<TodoList> notifier = ReplaySubject.create();
+
     private List<Todo> todoList;
 
     public TodoList() {
@@ -27,9 +35,14 @@ public class TodoList {
         readJson(json);
     }
 
-    public void setListener(TodoListener listener) {
-        this.listener = listener;
+    // expose TodoList as an observable
+    public Observable<TodoList> asObservable() {
+        return notifier;
     }
+
+//    public void setListener(TodoListener listener) {
+//        this.listener = listener;
+//    }
 
     public int size() {
         return todoList.size();
@@ -41,25 +54,28 @@ public class TodoList {
 
     public void add(Todo t) {
         todoList.add(t);
-        if (listener != null) {
-            listener.onTodoListChanged(this);
-        }
+//        if (listener != null) {
+//            listener.onTodoListChanged(this);
+//        }
+        notifier.onNext(this);
     }
 
     public void remove(Todo t) {
         todoList.remove(t);
-        if (listener != null) {
-            listener.onTodoListChanged(this);
-        }
+//        if (listener != null) {
+//            listener.onTodoListChanged(this);
+//        }
+        notifier.onNext(this);
     }
 
     public void toggle(Todo t) {
         Todo todo = todoList.get(todoList.indexOf(t));
         boolean curVal = todo.isCompleted;
         todo.isCompleted = !curVal;
-        if (listener != null) {
-            listener.onTodoListChanged(this);
-        }
+//        if (listener != null) {
+//            listener.onTodoListChanged(this);
+//        }
+        notifier.onNext(this);
     }
 
     private void readJson(String json) {

@@ -51,9 +51,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTodoCompletedChanged(Todo todo) {
                 list.toggle(todo);
-                adapter.onTodoListChanged(filter.getFilteredData());
+                // TodoList Will push out any changes automatically to any subscribers
+                //adapter.onTodoListChanged(filter.getFilteredData());
             }
         });
+        //make sure adapter is subscribed to list
+        list.asObservable().subscribe(adapter);
+        list.asObservable().subscribe(filter);
 
         // setup the list with the adapter
         recyclerView = (RecyclerView) findViewById(R.id.recyclerview);
@@ -75,7 +79,8 @@ public class MainActivity extends AppCompatActivity {
                     list.add(new Todo(item, false));
 
                     // update the adapter with the latest filtered data
-                    adapter.onTodoListChanged(filter.getFilteredData());
+                    // TodoList Will push out any changes automatically to any subscribers
+                    //adapter.onTodoListChanged(filter.getFilteredData());
 
                     // clear input, remove focus, and hide keyboard
                     addInput.setText("");
@@ -96,13 +101,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 filter.setFilterMode(position);
-                adapter.onTodoListChanged(filter.getFilteredData());
+                //adapter.onTodoListChanged(filter.getFilteredData());
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 filter.setFilterMode(TodoListFilter.ALL);
-                adapter.onTodoListChanged(filter.getFilteredData());
+                //adapter.onTodoListChanged(filter.getFilteredData());
             }
         });
 

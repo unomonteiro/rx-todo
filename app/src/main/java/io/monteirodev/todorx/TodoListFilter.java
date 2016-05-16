@@ -1,7 +1,11 @@
 package io.monteirodev.todorx;
 
 
-public class TodoListFilter implements TodoListener {
+import rx.functions.Action1;
+
+public class TodoListFilter implements Action1<TodoList>
+        // implements TodoListener
+{
 
     public static final int ALL = 0;
     public static final int INCOMPLETE = 1;
@@ -13,7 +17,7 @@ public class TodoListFilter implements TodoListener {
 
     public TodoListFilter(TodoList list) {
         this.list = list;
-        this.list.setListener(this);
+        //this.list.setListener(this);
     }
 
     public void setFilterMode(int mode) {
@@ -47,8 +51,13 @@ public class TodoListFilter implements TodoListener {
         }
     }
 
+//    @Override
+//    public void onTodoListChanged(TodoList updatedList) {
+//        list = updatedList;
+//    }
+
     @Override
-    public void onTodoListChanged(TodoList updatedList) {
-        list = updatedList;
+    public void call(TodoList todoList) {
+        list = todoList;
     }
 }
