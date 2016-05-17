@@ -8,10 +8,14 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 
+import com.jakewharton.rxbinding.widget.RxCompoundButton;
+
 import java.util.Collections;
 import java.util.List;
 
+import rx.Subscription;
 import rx.functions.Action1;
+import rx.functions.Func1;
 
 public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoHolder>
         //implements TodoListener
@@ -20,14 +24,15 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoHolder>
 
     LayoutInflater inflater;
 
-    TodoCompletedChangeListener todoChangeListener;
+    //TodoCompletedChangeListener todoChangeListener;
+    Action1<Todo> subscriber;
 
     //TodoList data = new TodoList();
     List<Todo> data = Collections.emptyList();
 
-    public TodoAdapter(Activity activity, TodoCompletedChangeListener listener) {
+    public TodoAdapter(Activity activity, Action1<Todo> listener) {
         inflater = LayoutInflater.from(activity);
-        todoChangeListener = listener;
+        subscriber = listener;
     }
 
     @Override
@@ -44,21 +49,39 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoHolder>
     public void onBindViewHolder(TodoHolder holder, int position) {
         final Todo todo = data.get(position);
         holder.checkbox.setText(todo.description);
-
-        // ensure existing listener is nulled out, setting the value causes a check changed listener callback
-        holder.checkbox.setOnCheckedChangeListener(null);
-
-        // set the current value, then setup the listener
+        // set the current value
         holder.checkbox.setChecked(todo.isCompleted);
-        holder.checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                todoChangeListener.onTodoCompletedChanged(todo);
-            }
-        });
+
+//        // ensure existing listener is nulled out, setting the value causes a check changed listener callback
+//        holder.checkbox.setOnCheckedChangeListener(null);
+//
+//        // set the current value, then setup the listener
+//        holder.checkbox.setChecked(todo.isCompleted);
+//        holder.checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//                todoChangeListener.onTodoCompletedChanged(todo);
+//            }
+//        });
+
+        holder.subscription = RxCompoundButton.checkedChanges(holder.checkbox)
+                .skip(1)
+                .map(new Func1<Boolean, Todo>() {
+                    @Override
+                    public Todo call(Boolean aBoolean) {
+                        return todo;
+                    }
+                })
+                .subscribe(subscriber);
     }
 
-//    @Override
+    @Override
+    public void onViewDetachedFromWindow(TodoHolder holder) {
+        super.onViewDetachedFromWindow(holder);
+        holder.subscription.unsubscribe();
+    }
+
+    //    @Override
 //    public void onTodoListChanged(TodoList updatedList) {
 //        data = updatedList;
 //        notifyDataSetChanged();
@@ -79,6 +102,8 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoHolder>
     public class TodoHolder extends RecyclerView.ViewHolder {
 
         public CheckBox checkbox;
+        // un-bind subscriptions
+        public Subscription subscription;
 
         public TodoHolder(View itemView) {
             super(itemView);

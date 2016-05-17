@@ -14,9 +14,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import rx.Observable;
+import rx.functions.Action1;
 import rx.subjects.ReplaySubject;
 
-public class TodoList {
+public class TodoList implements Action1<Todo> {
 
     //private TodoListener listener;
     // Observable to Observer can be a Subject
@@ -68,7 +69,7 @@ public class TodoList {
         notifier.onNext(this);
     }
 
-    public void toggle(Todo t) {
+    private void toggle(Todo t) {
         Todo todo = todoList.get(todoList.indexOf(t));
         boolean curVal = todo.isCompleted;
         todo.isCompleted = !curVal;
@@ -76,6 +77,12 @@ public class TodoList {
 //            listener.onTodoListChanged(this);
 //        }
         notifier.onNext(this);
+    }
+
+    @Override
+    public void call(Todo todo) {
+        // instead of toggle
+        toggle(todo);
     }
 
     public List<Todo> getAll(){
@@ -170,4 +177,5 @@ public class TodoList {
 
         return json;
     }
+
 }
